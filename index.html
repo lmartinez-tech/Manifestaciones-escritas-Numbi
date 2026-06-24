@@ -819,6 +819,7 @@
     </main>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
     const categories = [
       "Información contable incompleta",
@@ -968,6 +969,31 @@
       });
     }
 
+    function readFileAsArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    async function readPdfText(file) {
+      if (!window.pdfjsLib) {
+        throw new Error("El lector de PDF no terminó de cargar. Revisa la conexión e intenta de nuevo.");
+      }
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      const buffer = await readFileAsArrayBuffer(file);
+      const pdf = await window.pdfjsLib.getDocument({ data: buffer }).promise;
+      const pages = [];
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+        const page = await pdf.getPage(pageNumber);
+        const content = await page.getTextContent();
+        pages.push(content.items.map((item) => item.str || "").join(" "));
+      }
+      return pages.join("\n").replace(/\s+/g, " ").trim();
+    }
+
     async function handleRutRead() {
       const file = $("rutFile").files[0];
       if (!file) {
@@ -975,15 +1001,28 @@
         return;
       }
       $("rutStatus").textContent = `Archivo cargado: ${file.name}`;
-      const readable = /\.(txt|csv)$/i.test(file.name);
-      if (!readable) {
-        $("rutStatus").textContent = "Archivo registrado. El navegador no puede extraer texto de este formato sin OCR; completa los campos pendientes.";
+      let text = "";
+      try {
+        if (/\.pdf$/i.test(file.name)) {
+          $("rutStatus").textContent = "Leyendo texto del PDF...";
+          text = await readPdfText(file);
+          if (!text) {
+            $("rutStatus").textContent = "El PDF parece escaneado o no contiene texto seleccionable. Se requiere OCR; completa los campos pendientes.";
+            return;
+          }
+        } else if (/\.(txt|csv)$/i.test(file.name)) {
+          text = await readFileAsText(file);
+        } else {
+          $("rutStatus").textContent = "Archivo registrado. Las imágenes requieren OCR; completa los campos pendientes.";
+          return;
+        }
+      } catch (error) {
+        $("rutStatus").textContent = error.message || "No fue posible leer el archivo. Completa los campos pendientes.";
         return;
       }
-      const text = await readFileAsText(file);
       const data = extractRutFields(text);
       Object.entries(data).forEach(([key, value]) => setFieldIfEmpty(key, value));
-      $("rutStatus").textContent = Object.keys(data).length ? "Datos extraídos y cargados para revisión." : "No se detectaron campos estructurados; completa manualmente.";
+      $("rutStatus").textContent = Object.keys(data).length ? "Datos extraídos del PDF y cargados para revisión." : "Se leyó texto del PDF, pero no se detectaron campos estructurados; completa manualmente.";
       generateDocument(false);
     }
 
