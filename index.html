@@ -642,7 +642,7 @@
           <div class="brand-mark">numbi</div>
           <div>
             <h1>Acta de diagnóstico, reconocimiento de estado contable recibido, limitaciones y aceptación de riesgos</h1>
-            <p class="subtitle">Herramienta interna para documentar hallazgos, riesgos, pendientes y aceptación informada del cliente. Lector PDF activo v2.</p>
+            <p class="subtitle">Herramienta interna para documentar hallazgos, riesgos, pendientes y aceptación informada del cliente.</p>
           </div>
         </div>
         <div class="top-actions">
@@ -662,53 +662,36 @@
             <span class="step-number">1</span>
             <span>
               <span class="panel-title">Información del cliente</span>
-              <span class="panel-note">Carga del RUT y datos base editables.</span>
+              <span class="panel-note">Datos base editables para el acta.</span>
             </span>
             <span class="chevron">⌄</span>
           </summary>
           <div class="panel-body">
             <div class="dropzone">
-              <strong>Cargar RUT del cliente</strong>
-              <span class="file-hint">PDF, imagen o archivo de texto. Si el navegador no puede leer el contenido, los campos quedarán como pendientes.</span>
-              <input id="rutFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv">
-              <div class="button-row">
-                <button class="btn small" id="readRutBtn" type="button">Extraer datos posibles</button>
-                <span class="file-hint" id="rutStatus">Sin archivo cargado.</span>
-              </div>
+              <strong>Datos del cliente</strong>
+              <span class="file-hint">Completa manualmente los datos básicos. No se intentará leer el RUT automáticamente.</span>
             </div>
 
             <div class="grid-2">
               <div class="field">
                 <label for="razonSocial">Razón social</label>
-                <input id="razonSocial" data-client placeholder="Pendiente por completar">
+                <input id="razonSocial" data-client placeholder="Ej. COESCALA S.A.S.">
               </div>
               <div class="field">
                 <label for="nit">NIT</label>
-                <input id="nit" data-client placeholder="Pendiente por completar">
+                <input id="nit" data-client placeholder="Ej. 900.000.000-1">
               </div>
               <div class="field">
-                <label for="direccion">Dirección</label>
-                <input id="direccion" data-client placeholder="Pendiente por completar">
+                <label for="representante">Nombre del representante legal</label>
+                <input id="representante" data-client placeholder="Nombre completo">
               </div>
               <div class="field">
-                <label for="ciudad">Ciudad</label>
-                <input id="ciudad" data-client placeholder="Pendiente por completar">
-              </div>
-              <div class="field">
-                <label for="actividad">Actividad económica principal</label>
-                <input id="actividad" data-client placeholder="Pendiente por completar">
+                <label for="docRepresentante">Cédula de identificación</label>
+                <input id="docRepresentante" data-client placeholder="Ej. C.C. 00.000.000">
               </div>
               <div class="field">
                 <label for="periodos">Periodos revisados</label>
                 <input id="periodos" data-client placeholder="Ej. enero a diciembre de 2025">
-              </div>
-              <div class="field">
-                <label for="representante">Representante legal</label>
-                <input id="representante" data-client placeholder="Pendiente por completar">
-              </div>
-              <div class="field">
-                <label for="docRepresentante">Documento representante legal</label>
-                <input id="docRepresentante" data-client placeholder="Pendiente por completar">
               </div>
               <div class="field">
                 <label for="responsableNumbi">Responsable de Numbi</label>
@@ -819,7 +802,6 @@
     </main>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
     const categories = [
       "Información contable incompleta",
@@ -872,9 +854,9 @@
       return {
         razonSocial: $("razonSocial").value.trim(),
         nit: $("nit").value.trim(),
-        direccion: $("direccion").value.trim(),
-        ciudad: $("ciudad").value.trim(),
-        actividad: $("actividad").value.trim(),
+        direccion: "",
+        ciudad: "",
+        actividad: "",
         periodos: $("periodos").value.trim(),
         representante: $("representante").value.trim(),
         docRepresentante: $("docRepresentante").value.trim(),
@@ -935,31 +917,6 @@
       return missing;
     }
 
-    function setFieldIfEmpty(id, value) {
-      const input = $(id);
-      if (!input.value.trim() && value) input.value = value.trim();
-    }
-
-    function extractRutFields(text) {
-      const compact = text.replace(/\s+/g, " ").trim();
-      const data = {};
-      const nit = compact.match(/\b(?:NIT|Nit|nit)[:\s]*([0-9.\-]{6,20})/);
-      const razon = compact.match(/(?:Raz[oó]n social|Nombre o raz[oó]n social)[:\s]*([^|;\n]{4,90})/i);
-      const direccion = compact.match(/(?:Direcci[oó]n|Domicilio)[:\s]*([^|;\n]{4,90})/i);
-      const ciudad = compact.match(/(?:Ciudad|Municipio)[:\s]*([A-Za-zÁÉÍÓÚÑáéíóúñ\s]{3,45})/i);
-      const actividad = compact.match(/(?:Actividad econ[oó]mica principal|Actividad principal|CIIU)[:\s]*([^|;\n]{3,100})/i);
-      const rep = compact.match(/(?:Representante legal|Rep\. legal)[:\s]*([^|;\n]{4,90})/i);
-      const docRep = compact.match(/(?:C[eé]dula|Documento|Identificaci[oó]n)[:\s]*([0-9.\-]{5,20})/i);
-      if (nit) data.nit = nit[1];
-      if (razon) data.razonSocial = razon[1];
-      if (direccion) data.direccion = direccion[1];
-      if (ciudad) data.ciudad = ciudad[1];
-      if (actividad) data.actividad = actividad[1];
-      if (rep) data.representante = rep[1];
-      if (docRep) data.docRepresentante = docRep[1];
-      return data;
-    }
-
     function readFileAsText(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -967,63 +924,6 @@
         reader.onerror = reject;
         reader.readAsText(file);
       });
-    }
-
-    function readFileAsArrayBuffer(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsArrayBuffer(file);
-      });
-    }
-
-    async function readPdfText(file) {
-      if (!window.pdfjsLib) {
-        throw new Error("El lector de PDF no terminó de cargar. Revisa la conexión e intenta de nuevo.");
-      }
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-      const buffer = await readFileAsArrayBuffer(file);
-      const pdf = await window.pdfjsLib.getDocument({ data: buffer }).promise;
-      const pages = [];
-      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-        const page = await pdf.getPage(pageNumber);
-        const content = await page.getTextContent();
-        pages.push(content.items.map((item) => item.str || "").join(" "));
-      }
-      return pages.join("\n").replace(/\s+/g, " ").trim();
-    }
-
-    async function handleRutRead() {
-      const file = $("rutFile").files[0];
-      if (!file) {
-        $("rutStatus").textContent = "Selecciona un archivo primero.";
-        return;
-      }
-      $("rutStatus").textContent = `Archivo cargado: ${file.name}`;
-      let text = "";
-      try {
-        if (/\.pdf$/i.test(file.name)) {
-          $("rutStatus").textContent = "Leyendo texto del PDF...";
-          text = await readPdfText(file);
-          if (!text) {
-            $("rutStatus").textContent = "El PDF parece escaneado o no contiene texto seleccionable. Se requiere OCR; completa los campos pendientes.";
-            return;
-          }
-        } else if (/\.(txt|csv)$/i.test(file.name)) {
-          text = await readFileAsText(file);
-        } else {
-          $("rutStatus").textContent = "Archivo registrado. Las imágenes requieren OCR; completa los campos pendientes.";
-          return;
-        }
-      } catch (error) {
-        $("rutStatus").textContent = error.message || "No fue posible leer el archivo. Completa los campos pendientes.";
-        return;
-      }
-      const data = extractRutFields(text);
-      Object.entries(data).forEach(([key, value]) => setFieldIfEmpty(key, value));
-      $("rutStatus").textContent = Object.keys(data).length ? "Datos extraídos del PDF y cargados para revisión." : "Se leyó texto del PDF, pero no se detectaron campos estructurados; completa manualmente.";
-      generateDocument(false);
     }
 
     function splitFindings(text) {
@@ -1216,10 +1116,8 @@
           <div><b>Razón social:</b> ${escapeHtml(valueOrPending(data.razonSocial))}</div>
           <div><b>NIT:</b> ${escapeHtml(valueOrPending(data.nit))}</div>
           <div><b>Representante legal:</b> ${escapeHtml(valueOrPending(data.representante))}</div>
-          <div><b>Documento:</b> ${escapeHtml(valueOrPending(data.docRepresentante))}</div>
-          <div><b>Ciudad:</b> ${escapeHtml(valueOrPending(data.ciudad))}</div>
+          <div><b>Cédula de identificación:</b> ${escapeHtml(valueOrPending(data.docRepresentante))}</div>
           <div><b>Periodos revisados:</b> ${escapeHtml(valueOrPending(data.periodos))}</div>
-          <div><b>Dirección:</b> ${escapeHtml(valueOrPending(data.direccion))}</div>
           <div><b>Responsable Numbi:</b> ${escapeHtml(valueOrPending(data.responsableNumbi))}</div>
         </div>
         <div class="doc-content">
@@ -1301,11 +1199,6 @@
     }
 
     $("fecha").value = todayIso();
-    $("readRutBtn").addEventListener("click", handleRutRead);
-    $("rutFile").addEventListener("change", () => {
-      const file = $("rutFile").files[0];
-      $("rutStatus").textContent = file ? `Archivo cargado: ${file.name}` : "Sin archivo cargado.";
-    });
     $("findingsFile").addEventListener("change", handleFindingsFile);
     $("classifyBtn").addEventListener("click", classifyFindings);
     $("addFindingBtn").addEventListener("click", () => {
