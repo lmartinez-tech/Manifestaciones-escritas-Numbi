@@ -6,19 +6,24 @@
   <title>Numbi | Acta de diagnóstico contable</title>
   <style>
     :root {
-      --ink: #172033;
-      --muted: #667085;
-      --line: #d9dee8;
-      --soft: #f5f7fb;
+      --ink: #233037;
+      --muted: #71828a;
+      --line: #d7e3df;
+      --soft: #f6faf8;
       --panel: #ffffff;
-      --brand: #123e52;
-      --brand-2: #1f6f78;
-      --accent: #d6b56d;
-      --ok: #157347;
-      --warn: #a76700;
-      --high: #b54708;
-      --critical: #b42318;
-      --shadow: 0 18px 48px rgba(18, 62, 82, .10);
+      --brand: #007a52;
+      --brand-2: #00d47f;
+      --blue: #2355d9;
+      --blue-soft: #eef6ff;
+      --mint: #d9f7e9;
+      --mint-2: #e7faf1;
+      --amber: #fff5de;
+      --accent: #9a6500;
+      --ok: #007a52;
+      --warn: #9a6500;
+      --high: #c0504d;
+      --critical: #a62420;
+      --shadow: 0 22px 58px rgba(35, 48, 55, .10);
     }
 
     * { box-sizing: border-box; }
@@ -26,8 +31,8 @@
     body {
       margin: 0;
       color: var(--ink);
-      background: #eef2f6;
-      font-family: "Segoe UI", "Noto Sans", Arial, sans-serif;
+      background: #f3f7f5;
+      font-family: Arial, "Segoe UI", "Noto Sans", sans-serif;
       line-height: 1.45;
     }
 
@@ -49,7 +54,7 @@
     .topbar {
       background: var(--panel);
       border-bottom: 1px solid var(--line);
-      box-shadow: 0 1px 0 rgba(16, 24, 40, .03);
+      box-shadow: 0 1px 0 rgba(35, 48, 55, .03);
     }
 
     .topbar-inner {
@@ -64,30 +69,37 @@
 
     .brand-line {
       display: flex;
-      gap: 14px;
+      gap: 18px;
       align-items: center;
       min-width: 0;
     }
 
     .brand-mark {
-      width: 48px;
-      height: 48px;
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
-      background: var(--brand);
-      color: #fff;
-      font-weight: 800;
-      letter-spacing: .04em;
+      width: auto;
+      height: auto;
+      border-radius: 0;
+      display: inline-flex;
+      align-items: baseline;
+      background: transparent;
+      color: var(--ink);
+      font-weight: 900;
+      font-size: 30px;
+      letter-spacing: 0;
       flex: 0 0 auto;
+    }
+
+    .brand-mark::after {
+      content: ".";
+      color: var(--brand-2);
     }
 
     h1, h2, h3, p { margin: 0; }
 
     h1 {
-      font-size: 21px;
+      font-size: 20px;
       line-height: 1.25;
       letter-spacing: 0;
+      color: var(--ink);
     }
 
     .subtitle {
@@ -123,8 +135,8 @@
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: 0 8px 26px rgba(16, 24, 40, .05);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(35, 48, 55, .06);
       overflow: hidden;
     }
 
@@ -142,16 +154,16 @@
       gap: 12px;
       align-items: center;
       border-bottom: 1px solid var(--line);
-      background: linear-gradient(180deg, #fff, #fbfcfe);
+      background: linear-gradient(180deg, #fff, #f9fdfb);
     }
 
     .step-number {
       width: 30px;
       height: 30px;
-      border-radius: 6px;
+      border-radius: 999px;
       display: grid;
       place-items: center;
-      background: #e7f0f2;
+      background: var(--mint);
       color: var(--brand);
       font-weight: 800;
       font-size: 13px;
@@ -219,8 +231,8 @@
 
     .dropzone {
       border: 1px dashed #9aa8ba;
-      border-radius: 8px;
-      background: #f9fbfd;
+      border-radius: 12px;
+      background: #fbfefd;
       padding: 16px;
       display: grid;
       gap: 10px;
@@ -246,20 +258,20 @@
       gap: 8px;
       align-items: center;
       justify-content: center;
-      background: #e9edf3;
+      background: #eef4f1;
       color: #233044;
       font-weight: 750;
       white-space: nowrap;
     }
 
     .btn.primary {
-      background: var(--brand);
-      color: #fff;
+      background: var(--brand-2);
+      color: #173127;
     }
 
     .btn.gold {
-      background: var(--accent);
-      color: #211a0a;
+      background: var(--ink);
+      color: #fff;
     }
 
     .btn.ghost {
@@ -300,7 +312,7 @@
 
     .metric {
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 11px;
       background: #fff;
     }
@@ -320,7 +332,7 @@
     .table-wrap {
       overflow-x: auto;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 12px;
       background: #fff;
     }
 
@@ -338,8 +350,8 @@
     }
 
     th {
-      background: #f3f6fa;
-      color: #344054;
+      background: var(--mint);
+      color: var(--ink);
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: .02em;
@@ -370,7 +382,7 @@
 
     .risk-Bajo { color: var(--ok); background: #edf7f0; }
     .risk-Medio { color: var(--warn); background: #fff7e8; }
-    .risk-Alto { color: var(--high); background: #fff0e6; }
+    .risk-Alto { color: var(--high); background: #fff1f0; }
     .risk-Crítico { color: var(--critical); background: #fff0ef; }
 
     .preview-shell {
@@ -383,7 +395,7 @@
     .preview-toolbar {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 14px;
       padding: 12px;
       display: flex;
       gap: 10px;
@@ -403,33 +415,41 @@
       min-height: 920px;
       background: #fff;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 18px;
       box-shadow: var(--shadow);
-      padding: 48px 54px;
+      padding: 54px 58px;
     }
 
     .doc-header {
       display: grid;
       grid-template-columns: 1fr auto;
       gap: 18px;
-      border-bottom: 2px solid var(--brand);
-      padding-bottom: 18px;
-      margin-bottom: 22px;
+      border-bottom: 0;
+      padding-bottom: 0;
+      margin-bottom: 24px;
     }
 
     .doc-brand {
-      color: var(--brand);
+      color: var(--ink);
       font-weight: 900;
-      letter-spacing: .08em;
-      font-size: 13px;
+      letter-spacing: 0;
+      font-size: 28px;
+      line-height: 1;
+      text-transform: lowercase;
+    }
+
+    .doc-brand::after {
+      content: ".";
+      color: var(--brand-2);
     }
 
     .doc-title {
-      font-size: 18px;
+      font-size: 30px;
       line-height: 1.28;
-      text-transform: uppercase;
+      text-transform: none;
       font-weight: 850;
-      margin-top: 8px;
+      margin-top: 18px;
+      max-width: 760px;
     }
 
     .doc-code {
@@ -445,14 +465,57 @@
       gap: 8px 16px;
       padding: 12px;
       border: 1px solid var(--line);
-      border-radius: 6px;
-      background: #fbfcfe;
+      border-radius: 14px;
+      background: var(--mint-2);
       margin-bottom: 22px;
       font-size: 12px;
     }
 
     .doc-meta b {
-      color: #344054;
+      color: var(--ink);
+    }
+
+    .doc-kicker {
+      display: inline-flex;
+      width: fit-content;
+      background: var(--mint);
+      color: var(--brand);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-top: 14px;
+    }
+
+    .doc-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0 22px;
+    }
+
+    .doc-stat {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .doc-stat strong {
+      color: var(--brand-2);
+      display: block;
+      font-size: 22px;
+      line-height: 1;
+      margin-bottom: 5px;
+    }
+
+    .doc-stat span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: lowercase;
     }
 
     .doc-content {
@@ -462,17 +525,36 @@
     }
 
     .doc-section h2 {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--brand);
       text-transform: uppercase;
       letter-spacing: .03em;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 6px;
-      margin-bottom: 8px;
+      border-bottom: 0;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      background: var(--mint);
+      border-radius: 999px;
+      display: inline-flex;
     }
 
     .doc-section p, .doc-section li {
       text-align: justify;
+    }
+
+    .doc-section:nth-child(2) > div,
+    .doc-section:nth-child(10) > div {
+      background: var(--blue-soft);
+      border-left: 4px solid var(--blue);
+      border-radius: 14px;
+      padding: 13px 15px;
+    }
+
+    .doc-section:nth-child(5) > div,
+    .doc-section:nth-child(11) > div {
+      background: var(--amber);
+      border-left: 4px solid var(--accent);
+      border-radius: 14px;
+      padding: 13px 15px;
     }
 
     .doc-section ul {
@@ -557,7 +639,7 @@
     <header class="topbar">
       <div class="topbar-inner">
         <div class="brand-line">
-          <div class="brand-mark">N</div>
+          <div class="brand-mark">numbi</div>
           <div>
             <h1>Acta de diagnóstico, reconocimiento de estado contable recibido, limitaciones y aceptación de riesgos</h1>
             <p class="subtitle">Herramienta interna para documentar hallazgos, riesgos, pendientes y aceptación informada del cliente.</p>
@@ -1070,17 +1152,26 @@
     function renderDocument() {
       const data = clientData();
       const page = $("documentPage");
+      const criticalCount = state.findings.filter((item) => item.risk === "Crítico").length;
+      const highCount = state.findings.filter((item) => item.risk === "Alto").length;
+      const exposure = criticalCount ? "CRÍTICO" : highCount ? "ALTO" : state.findings.length ? "MEDIO" : "PENDIENTE";
       page.innerHTML = `
         <div class="doc-header">
           <div>
-            <div class="doc-brand">NUMBI</div>
-            <div class="doc-title">Acta de diagnóstico, reconocimiento de estado contable recibido, limitaciones y aceptación de riesgos</div>
+            <div class="doc-brand">numbi</div>
+            <div class="doc-kicker">Acta de diagnóstico · ${escapeHtml(formattedDate(data.fecha))}</div>
+            <div class="doc-title">Diagnóstico contable, limitaciones y aceptación de riesgos</div>
           </div>
           <div class="doc-code">
             Documento ${state.final ? "final" : "preliminar"}<br>
             Generado: ${escapeHtml(formattedDate(data.fecha))}<br>
             Versión: 1.0
           </div>
+        </div>
+        <div class="doc-stat-grid">
+          <div class="doc-stat"><strong>${escapeHtml(valueOrPending(data.periodos)).split(",").filter(Boolean).length || "1"}</strong><span>periodos revisados</span></div>
+          <div class="doc-stat"><strong>${state.findings.length}</strong><span>hallazgos registrados</span></div>
+          <div class="doc-stat"><strong>${escapeHtml(exposure)}</strong><span>nivel de exposición</span></div>
         </div>
         <div class="doc-meta">
           <div><b>Razón social:</b> ${escapeHtml(valueOrPending(data.razonSocial))}</div>
