@@ -1,0 +1,1211 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Numbi | Acta de diagnóstico contable</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d9dee8;
+      --soft: #f5f7fb;
+      --panel: #ffffff;
+      --brand: #123e52;
+      --brand-2: #1f6f78;
+      --accent: #d6b56d;
+      --ok: #157347;
+      --warn: #a76700;
+      --high: #b54708;
+      --critical: #b42318;
+      --shadow: 0 18px 48px rgba(18, 62, 82, .10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #eef2f6;
+      font-family: "Segoe UI", "Noto Sans", Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      box-shadow: 0 1px 0 rgba(16, 24, 40, .03);
+    }
+
+    .topbar-inner {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 18px 28px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .brand-line {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 800;
+      letter-spacing: .04em;
+      flex: 0 0 auto;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      font-size: 21px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .layout {
+      max-width: 1480px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 28px 40px;
+      display: grid;
+      grid-template-columns: minmax(440px, 600px) minmax(520px, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .workspace {
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 8px 26px rgba(16, 24, 40, .05);
+      overflow: hidden;
+    }
+
+    details.panel > summary {
+      list-style: none;
+      cursor: pointer;
+    }
+
+    details.panel > summary::-webkit-details-marker { display: none; }
+
+    .panel-head {
+      padding: 16px 18px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff, #fbfcfe);
+    }
+
+    .step-number {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      background: #e7f0f2;
+      color: var(--brand);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 750;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .chevron {
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .panel-body {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      color: #344054;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid #cfd6e1;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      padding: 10px 11px;
+      min-height: 40px;
+      outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--brand-2);
+      box-shadow: 0 0 0 3px rgba(31, 111, 120, .13);
+    }
+
+    .dropzone {
+      border: 1px dashed #9aa8ba;
+      border-radius: 8px;
+      background: #f9fbfd;
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .dropzone input {
+      min-height: auto;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .file-hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .btn {
+      min-height: 40px;
+      border-radius: 6px;
+      padding: 9px 13px;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      background: #e9edf3;
+      color: #233044;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .btn.primary {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .btn.gold {
+      background: var(--accent);
+      color: #211a0a;
+    }
+
+    .btn.ghost {
+      background: transparent;
+      border: 1px solid var(--line);
+    }
+
+    .btn.small {
+      min-height: 32px;
+      padding: 6px 9px;
+      font-size: 12px;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .alert {
+      display: none;
+      border-radius: 6px;
+      border: 1px solid #f3c8c5;
+      background: #fff3f2;
+      color: #8a1f17;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .alert.show { display: block; }
+
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px;
+      background: #fff;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 18px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background: #f3f6fa;
+      color: #344054;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+
+    td input, td select, td textarea {
+      border-color: transparent;
+      background: transparent;
+      padding: 6px;
+      min-height: 34px;
+    }
+
+    td textarea {
+      min-height: 54px;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .risk-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid currentColor;
+    }
+
+    .risk-Bajo { color: var(--ok); background: #edf7f0; }
+    .risk-Medio { color: var(--warn); background: #fff7e8; }
+    .risk-Alto { color: var(--high); background: #fff0e6; }
+    .risk-Crítico { color: var(--critical); background: #fff0ef; }
+
+    .preview-shell {
+      position: sticky;
+      top: 20px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .preview-toolbar {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 8px 26px rgba(16, 24, 40, .05);
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .document-page {
+      min-height: 920px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 48px 54px;
+    }
+
+    .doc-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      border-bottom: 2px solid var(--brand);
+      padding-bottom: 18px;
+      margin-bottom: 22px;
+    }
+
+    .doc-brand {
+      color: var(--brand);
+      font-weight: 900;
+      letter-spacing: .08em;
+      font-size: 13px;
+    }
+
+    .doc-title {
+      font-size: 18px;
+      line-height: 1.28;
+      text-transform: uppercase;
+      font-weight: 850;
+      margin-top: 8px;
+    }
+
+    .doc-code {
+      text-align: right;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .doc-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 16px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbfcfe;
+      margin-bottom: 22px;
+      font-size: 12px;
+    }
+
+    .doc-meta b {
+      color: #344054;
+    }
+
+    .doc-content {
+      display: grid;
+      gap: 18px;
+      font-size: 13px;
+    }
+
+    .doc-section h2 {
+      font-size: 13px;
+      color: var(--brand);
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+
+    .doc-section p, .doc-section li {
+      text-align: justify;
+    }
+
+    .doc-section ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+
+    .signature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 26px;
+      margin-top: 28px;
+    }
+
+    .signature {
+      padding-top: 42px;
+      border-top: 1px solid #344054;
+      font-size: 12px;
+    }
+
+    .editable-section {
+      min-height: 90px;
+    }
+
+    .doc-editor {
+      display: none;
+      gap: 12px;
+    }
+
+    .doc-editor.show { display: grid; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 1120px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-shell {
+        position: static;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .topbar-inner, .layout {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .topbar-inner, .grid-2, .summary-strip, .doc-meta, .signature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .document-page {
+        padding: 30px 22px;
+      }
+
+      .doc-header {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-code { text-align: left; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .topbar, .workspace, .preview-toolbar { display: none !important; }
+      .layout { display: block; padding: 0; max-width: none; }
+      .preview-shell { position: static; }
+      .document-page {
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        min-height: auto;
+        padding: 22mm 18mm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand-line">
+          <div class="brand-mark">N</div>
+          <div>
+            <h1>Acta de diagnóstico, reconocimiento de estado contable recibido, limitaciones y aceptación de riesgos</h1>
+            <p class="subtitle">Herramienta interna para documentar hallazgos, riesgos, pendientes y aceptación informada del cliente.</p>
+          </div>
+        </div>
+        <div class="top-actions">
+          <button class="btn ghost" id="saveDraftBtn" type="button">Guardar preliminar</button>
+          <button class="btn gold" id="finalBtn" type="button">Versión final</button>
+          <button class="btn primary" id="generateTopBtn" type="button">Generar acta</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="workspace">
+        <div id="alertBox" class="alert"></div>
+
+        <details class="panel" open>
+          <summary class="panel-head">
+            <span class="step-number">1</span>
+            <span>
+              <span class="panel-title">Información del cliente</span>
+              <span class="panel-note">Carga del RUT y datos base editables.</span>
+            </span>
+            <span class="chevron">⌄</span>
+          </summary>
+          <div class="panel-body">
+            <div class="dropzone">
+              <strong>Cargar RUT del cliente</strong>
+              <span class="file-hint">PDF, imagen o archivo de texto. Si el navegador no puede leer el contenido, los campos quedarán como pendientes.</span>
+              <input id="rutFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv">
+              <div class="button-row">
+                <button class="btn small" id="readRutBtn" type="button">Extraer datos posibles</button>
+                <span class="file-hint" id="rutStatus">Sin archivo cargado.</span>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label for="razonSocial">Razón social</label>
+                <input id="razonSocial" data-client placeholder="Pendiente por completar">
+              </div>
+              <div class="field">
+                <label for="nit">NIT</label>
+                <input id="nit" data-client placeholder="Pendiente por completar">
+              </div>
+              <div class="field">
+                <label for="direccion">Dirección</label>
+                <input id="direccion" data-client placeholder="Pendiente por completar">
+              </div>
+              <div class="field">
+                <label for="ciudad">Ciudad</label>
+                <input id="ciudad" data-client placeholder="Pendiente por completar">
+              </div>
+              <div class="field">
+                <label for="actividad">Actividad económica principal</label>
+                <input id="actividad" data-client placeholder="Pendiente por completar">
+              </div>
+              <div class="field">
+                <label for="periodos">Periodos revisados</label>
+                <input id="periodos" data-client placeholder="Ej. enero a diciembre de 2025">
+              </div>
+              <div class="field">
+                <label for="representante">Representante legal</label>
+                <input id="representante" data-client placeholder="Pendiente por completar">
+              </div>
+              <div class="field">
+                <label for="docRepresentante">Documento representante legal</label>
+                <input id="docRepresentante" data-client placeholder="Pendiente por completar">
+              </div>
+              <div class="field">
+                <label for="responsableNumbi">Responsable de Numbi</label>
+                <input id="responsableNumbi" data-client placeholder="Nombre del responsable">
+              </div>
+              <div class="field">
+                <label for="fecha">Fecha de generación</label>
+                <input id="fecha" data-client type="date">
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="panel" open>
+          <summary class="panel-head">
+            <span class="step-number">2</span>
+            <span>
+              <span class="panel-title">Hallazgos y auditoría</span>
+              <span class="panel-note">Pega notas o carga soportes para clasificar hallazgos.</span>
+            </span>
+            <span class="chevron">⌄</span>
+          </summary>
+          <div class="panel-body">
+            <div class="field">
+              <label for="findingsText">Pegar texto de auditoría, diagnóstico u observaciones</label>
+              <textarea id="findingsText" placeholder="Pega aquí hallazgos, pendientes, observaciones del contador, riesgos detectados o ajustes sugeridos."></textarea>
+            </div>
+            <div class="dropzone">
+              <strong>Subir archivo de hallazgos</strong>
+              <span class="file-hint">TXT y CSV se leen directamente. PDF, Word y Excel quedan registrados para revisión y pueden complementarse pegando texto.</span>
+              <input id="findingsFile" type="file" accept=".txt,.csv,.pdf,.doc,.docx,.xls,.xlsx">
+              <span class="file-hint" id="findingsFileStatus">Sin archivo cargado.</span>
+            </div>
+            <div class="button-row">
+              <button class="btn primary" id="classifyBtn" type="button">Clasificar hallazgos</button>
+              <button class="btn" id="addFindingBtn" type="button">Agregar hallazgo</button>
+              <button class="btn ghost" id="clearFindingsBtn" type="button">Limpiar tabla</button>
+            </div>
+          </div>
+        </details>
+
+        <details class="panel" open>
+          <summary class="panel-head">
+            <span class="step-number">3</span>
+            <span>
+              <span class="panel-title">Riesgos identificados</span>
+              <span class="panel-note">Tabla editable para completar, asignar responsable y estado.</span>
+            </span>
+            <span class="chevron">⌄</span>
+          </summary>
+          <div class="panel-body">
+            <div class="summary-strip">
+              <div class="metric"><span>Total</span><strong id="metricTotal">0</strong></div>
+              <div class="metric"><span>Alto</span><strong id="metricHigh">0</strong></div>
+              <div class="metric"><span>Crítico</span><strong id="metricCritical">0</strong></div>
+              <div class="metric"><span>Pendientes</span><strong id="metricPending">0</strong></div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Categoría</th>
+                    <th>Hallazgo</th>
+                    <th>Periodo afectado</th>
+                    <th>Impacto posible</th>
+                    <th>Nivel</th>
+                    <th>Responsable</th>
+                    <th>Estado</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="findingsTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </details>
+
+        <details class="panel" open>
+          <summary class="panel-head">
+            <span class="step-number">4</span>
+            <span>
+              <span class="panel-title">Acta generada</span>
+              <span class="panel-note">Edita secciones, previsualiza y descarga.</span>
+            </span>
+            <span class="chevron">⌄</span>
+          </summary>
+          <div class="panel-body">
+            <div class="button-row">
+              <button class="btn primary" id="generateBtn" type="button">Generar acta</button>
+              <button class="btn" id="editDocBtn" type="button">Editar documento</button>
+              <button class="btn ghost" id="previewBtn" type="button">Vista previa</button>
+            </div>
+            <div id="docEditor" class="doc-editor"></div>
+          </div>
+        </details>
+      </section>
+
+      <aside class="preview-shell">
+        <div class="preview-toolbar">
+          <span class="status" id="docStatus">Acta preliminar pendiente de generar.</span>
+          <div class="button-row">
+            <button class="btn ghost" id="downloadWordBtn" type="button">Descargar Word</button>
+            <button class="btn primary" id="downloadPdfBtn" type="button">Descargar PDF</button>
+          </div>
+        </div>
+        <article class="document-page" id="documentPage"></article>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const categories = [
+      "Información contable incompleta",
+      "Soportes pendientes",
+      "Bancos sin conciliar",
+      "Cuentas por cobrar con diferencias",
+      "Cuentas por pagar con diferencias",
+      "Impuestos pendientes o con riesgo",
+      "Nómina pendiente o inconsistente",
+      "Facturación electrónica con diferencias",
+      "Estados financieros no confiables",
+      "Saldos iniciales pendientes de validar",
+      "Migración incompleta",
+      "Riesgo de fiscalización",
+      "Ajustes que pueden afectar PyG",
+      "Ajustes que pueden afectar patrimonio",
+      "Ajustes que pueden afectar impuestos",
+      "Riesgos heredados de periodos anteriores"
+    ];
+
+    const risks = ["Bajo", "Medio", "Alto", "Crítico"];
+    const owners = ["Cliente", "Numbi", "Tercero", "Contador anterior"];
+    const states = ["Pendiente", "En revisión", "Validado", "Cerrado"];
+
+    const sectionTitles = [
+      "Antecedentes",
+      "Estado de la información recibida",
+      "Hallazgos identificados",
+      "Riesgos contables, financieros y tributarios",
+      "Posibles impactos en PyG, impuestos, patrimonio y estados financieros",
+      "Riesgos ante fiscalizaciones o requerimientos de autoridades",
+      "Responsabilidad sobre la información suministrada por el cliente",
+      "Limitación frente a periodos anteriores",
+      "Autorización para proponer y documentar ajustes",
+      "Información pendiente por entregar",
+      "Manifestación final del cliente",
+      "Espacio de firmas"
+    ];
+
+    const state = {
+      findings: [],
+      sections: {},
+      customSections: new Set(),
+      final: false
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function clientData() {
+      return {
+        razonSocial: $("razonSocial").value.trim(),
+        nit: $("nit").value.trim(),
+        direccion: $("direccion").value.trim(),
+        ciudad: $("ciudad").value.trim(),
+        actividad: $("actividad").value.trim(),
+        periodos: $("periodos").value.trim(),
+        representante: $("representante").value.trim(),
+        docRepresentante: $("docRepresentante").value.trim(),
+        responsableNumbi: $("responsableNumbi").value.trim(),
+        fecha: $("fecha").value
+      };
+    }
+
+    function valueOrPending(value) {
+      return value && value.trim() ? value.trim() : "Pendiente por completar";
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function optionList(items, selected) {
+      return items.map((item) => `<option ${item === selected ? "selected" : ""}>${escapeHtml(item)}</option>`).join("");
+    }
+
+    function todayIso() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function formattedDate(iso) {
+      if (!iso) return "Pendiente por completar";
+      const [y, m, d] = iso.split("-");
+      return `${d}/${m}/${y}`;
+    }
+
+    function showAlert(messages) {
+      const box = $("alertBox");
+      if (!messages.length) {
+        box.classList.remove("show");
+        box.textContent = "";
+        return;
+      }
+      box.innerHTML = `<strong>Falta información para generar el acta final:</strong> ${messages.map(escapeHtml).join(", ")}.`;
+      box.classList.add("show");
+      box.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function validateFinal() {
+      const data = clientData();
+      const missing = [];
+      if (!data.razonSocial) missing.push("Razón social");
+      if (!data.nit) missing.push("NIT");
+      if (!data.fecha) missing.push("Fecha");
+      if (!data.periodos) missing.push("Periodos revisados");
+      if (!state.findings.length) missing.push("Al menos un hallazgo");
+      if (!data.representante) missing.push("Representante legal o campo pendiente");
+      if (!data.responsableNumbi) missing.push("Responsable de Numbi");
+      return missing;
+    }
+
+    function setFieldIfEmpty(id, value) {
+      const input = $(id);
+      if (!input.value.trim() && value) input.value = value.trim();
+    }
+
+    function extractRutFields(text) {
+      const compact = text.replace(/\s+/g, " ").trim();
+      const data = {};
+      const nit = compact.match(/\b(?:NIT|Nit|nit)[:\s]*([0-9.\-]{6,20})/);
+      const razon = compact.match(/(?:Raz[oó]n social|Nombre o raz[oó]n social)[:\s]*([^|;\n]{4,90})/i);
+      const direccion = compact.match(/(?:Direcci[oó]n|Domicilio)[:\s]*([^|;\n]{4,90})/i);
+      const ciudad = compact.match(/(?:Ciudad|Municipio)[:\s]*([A-Za-zÁÉÍÓÚÑáéíóúñ\s]{3,45})/i);
+      const actividad = compact.match(/(?:Actividad econ[oó]mica principal|Actividad principal|CIIU)[:\s]*([^|;\n]{3,100})/i);
+      const rep = compact.match(/(?:Representante legal|Rep\. legal)[:\s]*([^|;\n]{4,90})/i);
+      const docRep = compact.match(/(?:C[eé]dula|Documento|Identificaci[oó]n)[:\s]*([0-9.\-]{5,20})/i);
+      if (nit) data.nit = nit[1];
+      if (razon) data.razonSocial = razon[1];
+      if (direccion) data.direccion = direccion[1];
+      if (ciudad) data.ciudad = ciudad[1];
+      if (actividad) data.actividad = actividad[1];
+      if (rep) data.representante = rep[1];
+      if (docRep) data.docRepresentante = docRep[1];
+      return data;
+    }
+
+    function readFileAsText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = reject;
+        reader.readAsText(file);
+      });
+    }
+
+    async function handleRutRead() {
+      const file = $("rutFile").files[0];
+      if (!file) {
+        $("rutStatus").textContent = "Selecciona un archivo primero.";
+        return;
+      }
+      $("rutStatus").textContent = `Archivo cargado: ${file.name}`;
+      const readable = /\.(txt|csv)$/i.test(file.name);
+      if (!readable) {
+        $("rutStatus").textContent = "Archivo registrado. El navegador no puede extraer texto de este formato sin OCR; completa los campos pendientes.";
+        return;
+      }
+      const text = await readFileAsText(file);
+      const data = extractRutFields(text);
+      Object.entries(data).forEach(([key, value]) => setFieldIfEmpty(key, value));
+      $("rutStatus").textContent = Object.keys(data).length ? "Datos extraídos y cargados para revisión." : "No se detectaron campos estructurados; completa manualmente.";
+      generateDocument(false);
+    }
+
+    function splitFindings(text) {
+      return text
+        .split(/\n+|•|- /)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 8);
+    }
+
+    function classifyLine(line) {
+      const lower = line.toLowerCase();
+      const rules = [
+        [/banco|concili/i, "Bancos sin conciliar", "Alto", "Ajustes que pueden afectar PyG"],
+        [/soporte|factura pendiente|documento/i, "Soportes pendientes", "Medio", "Estados financieros no confiables"],
+        [/impuesto|iva|renta|retenci/i, "Impuestos pendientes o con riesgo", "Crítico", "Ajustes que pueden afectar impuestos"],
+        [/n[oó]mina|seguridad social|planilla/i, "Nómina pendiente o inconsistente", "Alto", "Ajustes que pueden afectar impuestos"],
+        [/cuentas por cobrar|cartera|cliente/i, "Cuentas por cobrar con diferencias", "Alto", "Ajustes que pueden afectar PyG"],
+        [/cuentas por pagar|proveedor/i, "Cuentas por pagar con diferencias", "Alto", "Ajustes que pueden afectar patrimonio"],
+        [/facturaci[oó]n electr/i, "Facturación electrónica con diferencias", "Alto", "Riesgo de fiscalización"],
+        [/saldo inicial|apertura/i, "Saldos iniciales pendientes de validar", "Alto", "Ajustes que pueden afectar patrimonio"],
+        [/migraci/i, "Migración incompleta", "Alto", "Estados financieros no confiables"],
+        [/fiscaliz|requerimiento|dian|ugpp/i, "Riesgo de fiscalización", "Crítico", "Riesgos ante autoridades"],
+        [/periodo anterior|heredad|hist[oó]ric/i, "Riesgos heredados de periodos anteriores", "Alto", "Limitación frente a periodos anteriores"]
+      ];
+      const match = rules.find(([regex]) => regex.test(lower));
+      return {
+        id: crypto.randomUUID(),
+        category: match ? match[1] : "Información contable incompleta",
+        text: line,
+        period: $("periodos").value.trim() || "Pendiente por completar",
+        impact: match ? match[3] : "Estados financieros no confiables",
+        risk: match ? match[2] : "Medio",
+        owner: /cliente|entregar|pendiente/i.test(line) ? "Cliente" : "Contador anterior",
+        status: "Pendiente"
+      };
+    }
+
+    async function handleFindingsFile() {
+      const file = $("findingsFile").files[0];
+      if (!file) return "";
+      $("findingsFileStatus").textContent = `Archivo cargado: ${file.name}`;
+      if (/\.(txt|csv)$/i.test(file.name)) {
+        const text = await readFileAsText(file);
+        $("findingsText").value = `${$("findingsText").value.trim()}\n${text}`.trim();
+        $("findingsFileStatus").textContent = "Texto del archivo incorporado.";
+        return text;
+      }
+      $("findingsFileStatus").textContent = "Archivo registrado como soporte. Pega el texto legible para clasificarlo automáticamente.";
+      return "";
+    }
+
+    async function classifyFindings() {
+      await handleFindingsFile();
+      const lines = splitFindings($("findingsText").value);
+      if (!lines.length) {
+        showAlert(["Pega o carga texto de hallazgos para clasificar"]);
+        return;
+      }
+      state.findings = lines.map(classifyLine);
+      showAlert([]);
+      renderFindings();
+      generateDocument(false);
+    }
+
+    function blankFinding() {
+      return {
+        id: crypto.randomUUID(),
+        category: "Información contable incompleta",
+        text: "Pendiente por describir",
+        period: $("periodos").value.trim() || "Pendiente por completar",
+        impact: "Pendiente por evaluar",
+        risk: "Medio",
+        owner: "Cliente",
+        status: "Pendiente"
+      };
+    }
+
+    function updateFinding(id, key, value) {
+      const row = state.findings.find((item) => item.id === id);
+      if (row) row[key] = value;
+      renderMetrics();
+      generateDocument(false, true);
+    }
+
+    function renderFindings() {
+      const tbody = $("findingsTable");
+      tbody.innerHTML = state.findings.map((item) => `
+        <tr>
+          <td><select onchange="updateFinding('${item.id}', 'category', this.value)">${optionList(categories, item.category)}</select></td>
+          <td><textarea onchange="updateFinding('${item.id}', 'text', this.value)">${escapeHtml(item.text)}</textarea></td>
+          <td><input value="${escapeHtml(item.period)}" onchange="updateFinding('${item.id}', 'period', this.value)"></td>
+          <td><input value="${escapeHtml(item.impact)}" onchange="updateFinding('${item.id}', 'impact', this.value)"></td>
+          <td>
+            <select onchange="updateFinding('${item.id}', 'risk', this.value)">${optionList(risks, item.risk)}</select>
+            <span class="risk-pill risk-${escapeHtml(item.risk)}">${escapeHtml(item.risk)}</span>
+          </td>
+          <td><select onchange="updateFinding('${item.id}', 'owner', this.value)">${optionList(owners, item.owner)}</select></td>
+          <td><select onchange="updateFinding('${item.id}', 'status', this.value)">${optionList(states, item.status)}</select></td>
+          <td><button class="btn small ghost" type="button" onclick="deleteFinding('${item.id}')">Eliminar</button></td>
+        </tr>
+      `).join("");
+      renderMetrics();
+    }
+
+    function deleteFinding(id) {
+      state.findings = state.findings.filter((item) => item.id !== id);
+      renderFindings();
+      generateDocument(false);
+    }
+
+    function renderMetrics() {
+      $("metricTotal").textContent = state.findings.length;
+      $("metricHigh").textContent = state.findings.filter((item) => item.risk === "Alto").length;
+      $("metricCritical").textContent = state.findings.filter((item) => item.risk === "Crítico").length;
+      $("metricPending").textContent = state.findings.filter((item) => item.status === "Pendiente").length;
+    }
+
+    function findingsList() {
+      if (!state.findings.length) {
+        return "<p>No se han registrado hallazgos. Agrega al menos uno para completar el acta.</p>";
+      }
+      return `<ul>${state.findings.map((item) => `
+        <li><strong>${escapeHtml(item.category)}:</strong> ${escapeHtml(item.text)} Periodo: ${escapeHtml(item.period)}. Impacto posible: ${escapeHtml(item.impact)}. Riesgo: ${escapeHtml(item.risk)}. Responsable: ${escapeHtml(item.owner)}. Estado: ${escapeHtml(item.status)}.</li>
+      `).join("")}</ul>`;
+    }
+
+    function defaultSections(data) {
+      const company = valueOrPending(data.razonSocial);
+      const periods = valueOrPending(data.periodos);
+      const highRisks = state.findings.filter((item) => ["Alto", "Crítico"].includes(item.risk));
+      const pending = state.findings.filter((item) => item.status !== "Cerrado");
+      return {
+        "Antecedentes": `Numbi recibió información contable, financiera, tributaria y documental de ${company} para adelantar actividades de diagnóstico, revisión, reconstrucción, migración, acompañamiento contable o análisis de consistencia sobre los periodos ${periods}. Esta acta deja constancia de las condiciones bajo las cuales se recibe la información, de los hallazgos identificados y de las limitaciones conocidas al momento de su elaboración.`,
+        "Estado de la información recibida": `La información entregada por el cliente puede contener soportes pendientes, saldos sin validar, registros incompletos, diferencias entre auxiliares y reportes, inconsistencias de periodos anteriores o documentos que requieren confirmación adicional. Los campos no confirmados se mantienen como pendientes y no deben interpretarse como datos verificados por Numbi.`,
+        "Hallazgos identificados": findingsList(),
+        "Riesgos contables, financieros y tributarios": `Los hallazgos registrados pueden afectar la confiabilidad de la información contable, la razonabilidad de los estados financieros, la determinación de impuestos y la trazabilidad de soportes ante terceros o autoridades. A la fecha se identifican ${highRisks.length} hallazgos con nivel alto o crítico, sujetos a revisión, soporte y validación documental.`,
+        "Posibles impactos en PyG, impuestos, patrimonio y estados financieros": `El cliente entiende que los ajustes derivados del diagnóstico, conciliación, reconstrucción o migración pueden modificar ingresos, costos, gastos, activos, pasivos, patrimonio, resultados del periodo, declaraciones tributarias, reportes de información exógena y estados financieros. Dichos impactos dependerán de la evidencia disponible y del alcance contratado.`,
+        "Riesgos ante fiscalizaciones o requerimientos de autoridades": `La existencia de información incompleta, diferencias no conciliadas, impuestos pendientes, soportes insuficientes o registros heredados puede generar riesgos frente a fiscalizaciones, requerimientos, cruces de información o revisiones de autoridades tributarias, laborales, societarias o de control. Numbi documentará los hallazgos conocidos y las recomendaciones que correspondan dentro del alcance contratado.`,
+        "Responsabilidad sobre la información suministrada por el cliente": `El cliente declara que es responsable de entregar información completa, real, verificable y oportuna, así como de informar antecedentes, contingencias, requerimientos, declaraciones pendientes, ajustes previos y cualquier situación relevante. Numbi responderá por las actividades que ejecute dentro del alcance contratado, con base en la información efectivamente recibida y validada.`,
+        "Limitación frente a periodos anteriores": `Numbi no asume responsabilidad por errores, omisiones, inconsistencias, registros incompletos, soportes inexistentes o decisiones adoptadas antes del inicio de su servicio o fuera del alcance contratado. Esta limitación no constituye una exoneración absoluta de responsabilidad, sino una delimitación razonable frente a hechos, registros y periodos que no fueron preparados ni controlados por Numbi.`,
+        "Autorización para proponer y documentar ajustes": `El cliente autoriza a Numbi a proponer, explicar y documentar ajustes contables, tributarios o financieros que sean necesarios o recomendables conforme al diagnóstico realizado. La aprobación, suministro de soportes y decisiones finales sobre ajustes dependerán del cliente, salvo que el contrato disponga un procedimiento diferente.`,
+        "Información pendiente por entregar": pending.length ? `<ul>${pending.map((item) => `<li>${escapeHtml(item.text)} Responsable: ${escapeHtml(item.owner)}. Estado: ${escapeHtml(item.status)}.</li>`).join("")}</ul>` : "No se registran pendientes abiertos en la tabla al momento de generar esta versión.",
+        "Manifestación final del cliente": `El cliente manifiesta que conoce el estado de la información recibida, entiende las limitaciones del diagnóstico, acepta que pueden existir problemas heredados y reconoce que los ajustes derivados de la revisión pueden impactar PyG, impuestos, patrimonio, estados financieros o generar riesgos ante fiscalizaciones. El cliente también entiende que la gestión adecuada de dichos riesgos requiere entregar soportes completos y atender oportunamente las solicitudes de información.`,
+        "Espacio de firmas": ""
+      };
+    }
+
+    function renderEditor() {
+      const editor = $("docEditor");
+      editor.innerHTML = sectionTitles.filter((title) => title !== "Hallazgos identificados" && title !== "Espacio de firmas").map((title) => `
+        <div class="field">
+          <label>${escapeHtml(title)}</label>
+          <textarea class="editable-section" data-section="${escapeHtml(title)}">${escapeHtml(state.sections[title] || "")}</textarea>
+        </div>
+      `).join("");
+      editor.querySelectorAll("textarea").forEach((input) => {
+        input.addEventListener("input", () => {
+          state.customSections.add(input.dataset.section);
+          state.sections[input.dataset.section] = input.value;
+          renderDocument();
+        });
+      });
+    }
+
+    function renderDocument() {
+      const data = clientData();
+      const page = $("documentPage");
+      page.innerHTML = `
+        <div class="doc-header">
+          <div>
+            <div class="doc-brand">NUMBI</div>
+            <div class="doc-title">Acta de diagnóstico, reconocimiento de estado contable recibido, limitaciones y aceptación de riesgos</div>
+          </div>
+          <div class="doc-code">
+            Documento ${state.final ? "final" : "preliminar"}<br>
+            Generado: ${escapeHtml(formattedDate(data.fecha))}<br>
+            Versión: 1.0
+          </div>
+        </div>
+        <div class="doc-meta">
+          <div><b>Razón social:</b> ${escapeHtml(valueOrPending(data.razonSocial))}</div>
+          <div><b>NIT:</b> ${escapeHtml(valueOrPending(data.nit))}</div>
+          <div><b>Representante legal:</b> ${escapeHtml(valueOrPending(data.representante))}</div>
+          <div><b>Documento:</b> ${escapeHtml(valueOrPending(data.docRepresentante))}</div>
+          <div><b>Ciudad:</b> ${escapeHtml(valueOrPending(data.ciudad))}</div>
+          <div><b>Periodos revisados:</b> ${escapeHtml(valueOrPending(data.periodos))}</div>
+          <div><b>Dirección:</b> ${escapeHtml(valueOrPending(data.direccion))}</div>
+          <div><b>Responsable Numbi:</b> ${escapeHtml(valueOrPending(data.responsableNumbi))}</div>
+        </div>
+        <div class="doc-content">
+          ${sectionTitles.map((title, index) => {
+            if (title === "Espacio de firmas") {
+              return `<section class="doc-section"><h2>${index + 1}. ${title}</h2><div class="signature-grid"><div class="signature"><strong>${escapeHtml(valueOrPending(data.representante))}</strong><br>Representante legal del cliente<br>${escapeHtml(valueOrPending(data.docRepresentante))}</div><div class="signature"><strong>${escapeHtml(valueOrPending(data.responsableNumbi))}</strong><br>Representante de Numbi<br>Firma y fecha</div></div></section>`;
+            }
+            return `<section class="doc-section"><h2>${index + 1}. ${title}</h2><div>${state.sections[title] || ""}</div></section>`;
+          }).join("")}
+        </div>
+      `;
+      $("docStatus").textContent = state.final ? "Versión final lista para firma." : "Vista previa preliminar editable.";
+    }
+
+    function generateDocument(markFinal, silent) {
+      if (markFinal) {
+        const missing = validateFinal();
+        if (missing.length) {
+          showAlert(missing);
+          return false;
+        }
+        state.final = true;
+      }
+      showAlert([]);
+      const defaults = defaultSections(clientData());
+      sectionTitles.forEach((title) => {
+        if (title === "Hallazgos identificados" || !state.customSections.has(title)) {
+          state.sections[title] = defaults[title];
+        }
+      });
+      renderEditor();
+      renderDocument();
+      if (!silent) $("documentPage").scrollIntoView({ behavior: "smooth", block: "start" });
+      return true;
+    }
+
+    function saveDraft() {
+      const data = {
+        client: clientData(),
+        findings: state.findings,
+        sections: state.sections,
+        customSections: Array.from(state.customSections),
+        final: state.final,
+        findingsText: $("findingsText").value
+      };
+      localStorage.setItem("numbi-acta-diagnostico", JSON.stringify(data));
+      $("docStatus").textContent = "Versión preliminar guardada en este navegador.";
+    }
+
+    function loadDraft() {
+      const raw = localStorage.getItem("numbi-acta-diagnostico");
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        Object.entries(data.client || {}).forEach(([key, value]) => {
+          if ($(key)) $(key).value = value;
+        });
+        state.findings = data.findings || [];
+        state.sections = data.sections || {};
+        state.customSections = new Set(data.customSections || []);
+        state.final = Boolean(data.final);
+        $("findingsText").value = data.findingsText || "";
+        renderFindings();
+      } catch {
+        localStorage.removeItem("numbi-acta-diagnostico");
+      }
+    }
+
+    function downloadWord() {
+      generateDocument(false, true);
+      const html = `<!doctype html><html><head><meta charset="utf-8"><title>Acta Numbi</title></head><body>${$("documentPage").innerHTML}</body></html>`;
+      const blob = new Blob([html], { type: "application/msword;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Acta diagnostico Numbi - ${valueOrPending($("razonSocial").value)}.doc`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    $("fecha").value = todayIso();
+    $("readRutBtn").addEventListener("click", handleRutRead);
+    $("rutFile").addEventListener("change", () => {
+      const file = $("rutFile").files[0];
+      $("rutStatus").textContent = file ? `Archivo cargado: ${file.name}` : "Sin archivo cargado.";
+    });
+    $("findingsFile").addEventListener("change", handleFindingsFile);
+    $("classifyBtn").addEventListener("click", classifyFindings);
+    $("addFindingBtn").addEventListener("click", () => {
+      state.findings.push(blankFinding());
+      renderFindings();
+      generateDocument(false);
+    });
+    $("clearFindingsBtn").addEventListener("click", () => {
+      state.findings = [];
+      renderFindings();
+      generateDocument(false);
+    });
+    $("generateBtn").addEventListener("click", () => generateDocument(false));
+    $("generateTopBtn").addEventListener("click", () => generateDocument(false));
+    $("finalBtn").addEventListener("click", () => generateDocument(true));
+    $("saveDraftBtn").addEventListener("click", saveDraft);
+    $("editDocBtn").addEventListener("click", () => $("docEditor").classList.toggle("show"));
+    $("previewBtn").addEventListener("click", () => renderDocument());
+    $("downloadPdfBtn").addEventListener("click", () => {
+      generateDocument(false, true);
+      window.print();
+    });
+    $("downloadWordBtn").addEventListener("click", downloadWord);
+    document.querySelectorAll("[data-client]").forEach((input) => {
+      input.addEventListener("input", () => generateDocument(false, true));
+    });
+
+    loadDraft();
+    renderFindings();
+    generateDocument(false, true);
+  </script>
+</body>
+</html>
