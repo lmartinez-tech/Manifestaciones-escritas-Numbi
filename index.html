@@ -851,6 +851,7 @@
       findings: [],
       sections: {},
       customSections: new Set(),
+      lastFindingsFileSignature: "",
       final: false
     };
 
@@ -960,6 +961,75 @@
         .filter((line) => line.length > 8 && !ignored.test(line));
     }
 
+    function shortList(lines, limit) {
+      return lines
+        .filter(Boolean)
+        .slice(0, limit)
+        .join(" ");
+    }
+
+    function buildStructuredFinding(block) {
+      const title = block[0].replace(/^\d+\.\s*/, "").trim();
+      const description = [];
+      const consequences = [];
+      const risksFound = [];
+      let section = "description";
+
+      block.slice(1).forEach((line) => {
+        if (/^descripci[oó]n$/i.test(line)) {
+          section = "description";
+          return;
+        }
+        if (/^consecuencias$/i.test(line)) {
+          section = "consequences";
+          return;
+        }
+        if (/^riesgos$/i.test(line)) {
+          section = "risks";
+          return;
+        }
+        if (/^conclusi[oó]n$/i.test(line)) return;
+        if (section === "risks") risksFound.push(line);
+        else if (section === "consequences") consequences.push(line);
+        else description.push(line);
+      });
+
+      const narrative = [
+        title,
+        shortList(description, 2) && `Descripción: ${shortList(description, 2)}`,
+        shortList(consequences, 3) && `Consecuencias principales: ${shortList(consequences, 3)}`,
+        shortList(risksFound, 3) && `Riesgos advertidos: ${shortList(risksFound, 3)}`
+      ].filter(Boolean).join(". ");
+
+      const item = classifyLine(narrative);
+      const severeText = `${title} ${risksFound.join(" ")}`.toLowerCase();
+      item.text = narrative;
+      item.impact = shortList([...consequences, ...risksFound], 4) || item.impact;
+      item.risk = /penal|evasión|falsedad|fraude|clausura|dian|fiscalizaci|sanci/i.test(severeText) ? "Crítico" : item.risk;
+      item.owner = "Cliente";
+      return item;
+    }
+
+    function parseFindings(text) {
+      const lines = text
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+      const numberedIndexes = [];
+      lines.forEach((line, index) => {
+        if (/^\d+\.\s+/.test(line)) numberedIndexes.push(index);
+      });
+
+      if (numberedIndexes.length >= 2) {
+        return numberedIndexes.map((start, index) => {
+          const end = numberedIndexes[index + 1] ?? lines.length;
+          return buildStructuredFinding(lines.slice(start, end));
+        });
+      }
+
+      return splitFindings(text).map(classifyLine);
+    }
+
     function classifyLine(line) {
       const lower = line.toLowerCase();
       const rules = [
@@ -997,10 +1067,13 @@
     async function handleFindingsFile() {
       const file = $("findingsFile").files[0];
       if (!file) return "";
+      const signature = `${file.name}:${file.size}:${file.lastModified}`;
+      if (state.lastFindingsFileSignature === signature) return "";
       $("findingsFileStatus").textContent = `Archivo cargado: ${file.name}`;
       if (/\.(txt|csv)$/i.test(file.name)) {
         const text = await readFileAsText(file);
         $("findingsText").value = `${$("findingsText").value.trim()}\n${text}`.trim();
+        state.lastFindingsFileSignature = signature;
         $("findingsFileStatus").textContent = "Texto del archivo incorporado.";
         return text;
       }
@@ -1008,6 +1081,7 @@
         try {
           const text = await readWordText(file);
           $("findingsText").value = `${$("findingsText").value.trim()}\n${text}`.trim();
+          state.lastFindingsFileSignature = signature;
           $("findingsFileStatus").textContent = "Texto del Word incorporado.";
           return text;
         } catch (error) {
@@ -1021,12 +1095,16 @@
 
     async function classifyFindings() {
       await handleFindingsFile();
-      const lines = splitFindings($("findingsText").value);
-      if (!lines.length) {
+      const findings = parseFindings($("findingsText").value);
+      if (!findings.length) {
         showAlert(["Pega o carga texto de hallazgos para clasificar"]);
         return;
       }
-      state.findings = lines.map(classifyLine);
+      state.findings = findings;
+      const structuredCount = ($("findingsText").value.match(/^\d+\.\s+/gm) || []).length;
+      $("findingsFileStatus").textContent = structuredCount >= 2
+        ? `Se generaron ${findings.length} hallazgos consolidados a partir de secciones numeradas.`
+        : `Se generaron ${findings.length} hallazgos a partir del texto cargado.`;
       showAlert([]);
       renderFindings();
       generateDocument(false);
@@ -1266,7 +1344,11 @@
     }
 
     $("fecha").value = todayIso();
-    $("findingsFile").addEventListener("change", handleFindingsFile);
+    $("findingsFile").addEventListener("change", () => {
+      const file = $("findingsFile").files[0];
+      state.lastFindingsFileSignature = "";
+      $("findingsFileStatus").textContent = file ? `Archivo listo para clasificar: ${file.name}` : "Sin archivo cargado.";
+    });
     $("classifyBtn").addEventListener("click", classifyFindings);
     $("addFindingBtn").addEventListener("click", () => {
       state.findings.push(blankFinding());
