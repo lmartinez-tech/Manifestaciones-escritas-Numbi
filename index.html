@@ -641,8 +641,8 @@
         <div class="brand-line">
           <div class="brand-mark">numbi</div>
           <div>
-            <h1>Acta de diagnóstico, reconocimiento de estado contable recibido, limitaciones y aceptación de riesgos</h1>
-            <p class="subtitle">Herramienta interna para documentar hallazgos, riesgos, pendientes y aceptación informada del cliente.</p>
+            <h1>Manifestación escrita de inconsistencias contables, notificación y asunción de responsabilidad</h1>
+            <p class="subtitle">Herramienta interna para convertir hallazgos en una constancia firmable de notificación, decisión y responsabilidad del cliente.</p>
           </div>
         </div>
         <div class="top-actions">
@@ -721,7 +721,7 @@
             </div>
             <div class="dropzone">
               <strong>Subir archivo de hallazgos</strong>
-              <span class="file-hint">TXT y CSV se leen directamente. PDF, Word y Excel quedan registrados para revisión y pueden complementarse pegando texto.</span>
+              <span class="file-hint">TXT, CSV y Word se leen directamente. Para PDF o Excel, pega el texto legible en el campo anterior.</span>
               <input id="findingsFile" type="file" accept=".txt,.csv,.pdf,.doc,.docx,.xls,.xlsx">
               <span class="file-hint" id="findingsFileStatus">Sin archivo cargado.</span>
             </div>
@@ -802,6 +802,7 @@
     </main>
   </div>
 
+  <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
   <script>
     const categories = [
       "Información contable incompleta",
@@ -812,6 +813,11 @@
       "Impuestos pendientes o con riesgo",
       "Nómina pendiente o inconsistente",
       "Facturación electrónica con diferencias",
+      "Gastos personales registrados en la empresa",
+      "Activos o maquinaria sin soporte de existencia",
+      "Compras o gastos sin relación de causalidad",
+      "Certificaciones o información financiera inconsistente",
+      "Ingresos registrados sin factura o soporte formal",
       "Estados financieros no confiables",
       "Saldos iniciales pendientes de validar",
       "Migración incompleta",
@@ -835,7 +841,7 @@
       "Riesgos ante fiscalizaciones o requerimientos de autoridades",
       "Responsabilidad sobre la información suministrada por el cliente",
       "Limitación frente a periodos anteriores",
-      "Autorización para proponer y documentar ajustes",
+      "Instrucción del cliente frente a los hallazgos",
       "Información pendiente por entregar",
       "Manifestación final del cliente",
       "Espacio de firmas"
@@ -847,6 +853,8 @@
       customSections: new Set(),
       final: false
     };
+
+    const STORAGE_KEY = "numbi-manifestacion-responsabilidad-v2";
 
     const $ = (id) => document.getElementById(id);
 
@@ -926,16 +934,41 @@
       });
     }
 
+    function readFileAsArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    async function readWordText(file) {
+      if (!window.mammoth) {
+        throw new Error("El lector de Word no terminó de cargar. Revisa la conexión e intenta de nuevo.");
+      }
+      const arrayBuffer = await readFileAsArrayBuffer(file);
+      const result = await window.mammoth.extractRawText({ arrayBuffer });
+      return String(result.value || "").trim();
+    }
+
     function splitFindings(text) {
+      const ignored = /^(objetivo|descripci[oó]n|consecuencias|riesgos|conclusi[oó]n|malas pr[aá]cticas contables|tributarias y sus riesgos)$/i;
       return text
         .split(/\n+|•|- /)
         .map((line) => line.trim())
-        .filter((line) => line.length > 8);
+        .filter((line) => line.length > 8 && !ignored.test(line));
     }
 
     function classifyLine(line) {
       const lower = line.toLowerCase();
       const rules = [
+        [/no emitir facturas|omitir.*factura|sin.*factura|factura electr[oó]nica/i, "Facturación electrónica con diferencias", "Crítico", "Sanciones, rechazo de costos, IVA no declarado y riesgo de fiscalización"],
+        [/gastos personales|uso personal|socios|accionistas|administradores/i, "Gastos personales registrados en la empresa", "Crítico", "Rechazo de deducciones, mayor impuesto, sanción por inexactitud y responsabilidad de administradores"],
+        [/activo|maquinaria|equipo.*inexistente|bienes.*no existen|depreciaci/i, "Activos o maquinaria sin soporte de existencia", "Alto", "Sobrevaloración de activos, patrimonio y estados financieros no confiables"],
+        [/causalidad|objeto social|actividad productora|proporcionalidad|necesidad/i, "Compras o gastos sin relación de causalidad", "Alto", "Rechazo de costos y deducciones, mayores impuestos y contingencias tributarias"],
+        [/certificados? de ingresos|certificaciones?|informaci[oó]n financiera falsa|realidad econ[oó]mica/i, "Certificaciones o información financiera inconsistente", "Crítico", "Riesgo civil, disciplinario, penal, reputacional y frente a terceros"],
+        [/registrar ingresos|ingresos.*sin.*factura|reconocer ingresos/i, "Ingresos registrados sin factura o soporte formal", "Crítico", "Diferencias contables y tributarias, sanciones por facturación y requerimientos DIAN"],
         [/banco|concili/i, "Bancos sin conciliar", "Alto", "Ajustes que pueden afectar PyG"],
         [/soporte|factura pendiente|documento/i, "Soportes pendientes", "Medio", "Estados financieros no confiables"],
         [/impuesto|iva|renta|retenci/i, "Impuestos pendientes o con riesgo", "Crítico", "Ajustes que pueden afectar impuestos"],
@@ -956,7 +989,7 @@
         period: $("periodos").value.trim() || "Pendiente por completar",
         impact: match ? match[3] : "Estados financieros no confiables",
         risk: match ? match[2] : "Medio",
-        owner: /cliente|entregar|pendiente/i.test(line) ? "Cliente" : "Contador anterior",
+        owner: /numbi/i.test(line) ? "Numbi" : "Cliente",
         status: "Pendiente"
       };
     }
@@ -971,7 +1004,18 @@
         $("findingsFileStatus").textContent = "Texto del archivo incorporado.";
         return text;
       }
-      $("findingsFileStatus").textContent = "Archivo registrado como soporte. Pega el texto legible para clasificarlo automáticamente.";
+      if (/\.docx$/i.test(file.name)) {
+        try {
+          const text = await readWordText(file);
+          $("findingsText").value = `${$("findingsText").value.trim()}\n${text}`.trim();
+          $("findingsFileStatus").textContent = "Texto del Word incorporado.";
+          return text;
+        } catch (error) {
+          $("findingsFileStatus").textContent = error.message || "No fue posible leer el Word. Pega el texto legible para clasificarlo.";
+          return "";
+        }
+      }
+      $("findingsFileStatus").textContent = "Archivo registrado como soporte. Para este formato, pega el texto legible para clasificarlo automáticamente.";
       return "";
     }
 
@@ -1050,23 +1094,46 @@
       `).join("")}</ul>`;
     }
 
+    function notifiedFindingsList() {
+      if (!state.findings.length) {
+        return "<p>No se han registrado inconsistencias específicas para notificar al cliente.</p>";
+      }
+      return `<ol>${state.findings.map((item) => `
+        <li><strong>${escapeHtml(item.category)}.</strong> ${escapeHtml(item.text)} Esta situación fue informada como un riesgo asociado al periodo ${escapeHtml(item.period)} y puede generar el siguiente impacto: ${escapeHtml(item.impact)}.</li>
+      `).join("")}</ol>`;
+    }
+
+    function clientDecisionBlock() {
+      return `
+        <p>Con posterioridad a la notificación realizada por Numbi, el cliente manifiesta que entiende los riesgos informados y deja constancia de su decisión respecto de las situaciones identificadas:</p>
+        <ul>
+          <li>[  ] Mantener la información contable, tributaria o financiera en el estado en que fue entregada.</li>
+          <li>[  ] No realizar, por ahora, los ajustes, correcciones, conciliaciones o reconstrucciones recomendadas.</li>
+          <li>[  ] Manejar la situación por fuera del alcance contratado con Numbi.</li>
+          <li>[  ] Continuar el proceso con base en la información actualmente suministrada, aun con las inconsistencias advertidas.</li>
+          <li>[  ] Entregar soportes o instrucciones adicionales en una etapa posterior.</li>
+          <li>[  ] Otra instrucción del cliente: ________________________________________________.</li>
+        </ul>
+      `;
+    }
+
     function defaultSections(data) {
       const company = valueOrPending(data.razonSocial);
       const periods = valueOrPending(data.periodos);
       const highRisks = state.findings.filter((item) => ["Alto", "Crítico"].includes(item.risk));
       const pending = state.findings.filter((item) => item.status !== "Cerrado");
       return {
-        "Antecedentes": `Numbi recibió información contable, financiera, tributaria y documental de ${company} para adelantar actividades de diagnóstico, revisión, reconstrucción, migración, acompañamiento contable o análisis de consistencia sobre los periodos ${periods}. Esta acta deja constancia de las condiciones bajo las cuales se recibe la información, de los hallazgos identificados y de las limitaciones conocidas al momento de su elaboración.`,
-        "Estado de la información recibida": `La información entregada por el cliente puede contener soportes pendientes, saldos sin validar, registros incompletos, diferencias entre auxiliares y reportes, inconsistencias de periodos anteriores o documentos que requieren confirmación adicional. Los campos no confirmados se mantienen como pendientes y no deben interpretarse como datos verificados por Numbi.`,
-        "Hallazgos identificados": findingsList(),
-        "Riesgos contables, financieros y tributarios": `Los hallazgos registrados pueden afectar la confiabilidad de la información contable, la razonabilidad de los estados financieros, la determinación de impuestos y la trazabilidad de soportes ante terceros o autoridades. A la fecha se identifican ${highRisks.length} hallazgos con nivel alto o crítico, sujetos a revisión, soporte y validación documental.`,
-        "Posibles impactos en PyG, impuestos, patrimonio y estados financieros": `El cliente entiende que los ajustes derivados del diagnóstico, conciliación, reconstrucción o migración pueden modificar ingresos, costos, gastos, activos, pasivos, patrimonio, resultados del periodo, declaraciones tributarias, reportes de información exógena y estados financieros. Dichos impactos dependerán de la evidencia disponible y del alcance contratado.`,
-        "Riesgos ante fiscalizaciones o requerimientos de autoridades": `La existencia de información incompleta, diferencias no conciliadas, impuestos pendientes, soportes insuficientes o registros heredados puede generar riesgos frente a fiscalizaciones, requerimientos, cruces de información o revisiones de autoridades tributarias, laborales, societarias o de control. Numbi documentará los hallazgos conocidos y las recomendaciones que correspondan dentro del alcance contratado.`,
-        "Responsabilidad sobre la información suministrada por el cliente": `El cliente declara que es responsable de entregar información completa, real, verificable y oportuna, así como de informar antecedentes, contingencias, requerimientos, declaraciones pendientes, ajustes previos y cualquier situación relevante. Numbi responderá por las actividades que ejecute dentro del alcance contratado, con base en la información efectivamente recibida y validada.`,
-        "Limitación frente a periodos anteriores": `Numbi no asume responsabilidad por errores, omisiones, inconsistencias, registros incompletos, soportes inexistentes o decisiones adoptadas antes del inicio de su servicio o fuera del alcance contratado. Esta limitación no constituye una exoneración absoluta de responsabilidad, sino una delimitación razonable frente a hechos, registros y periodos que no fueron preparados ni controlados por Numbi.`,
-        "Autorización para proponer y documentar ajustes": `El cliente autoriza a Numbi a proponer, explicar y documentar ajustes contables, tributarios o financieros que sean necesarios o recomendables conforme al diagnóstico realizado. La aprobación, suministro de soportes y decisiones finales sobre ajustes dependerán del cliente, salvo que el contrato disponga un procedimiento diferente.`,
-        "Información pendiente por entregar": pending.length ? `<ul>${pending.map((item) => `<li>${escapeHtml(item.text)} Responsable: ${escapeHtml(item.owner)}. Estado: ${escapeHtml(item.status)}.</li>`).join("")}</ul>` : "No se registran pendientes abiertos en la tabla al momento de generar esta versión.",
-        "Manifestación final del cliente": `El cliente manifiesta que conoce el estado de la información recibida, entiende las limitaciones del diagnóstico, acepta que pueden existir problemas heredados y reconoce que los ajustes derivados de la revisión pueden impactar PyG, impuestos, patrimonio, estados financieros o generar riesgos ante fiscalizaciones. El cliente también entiende que la gestión adecuada de dichos riesgos requiere entregar soportes completos y atender oportunamente las solicitudes de información.`,
+        "Antecedentes": `Numbi revisó la información contable, tributaria, financiera o documental suministrada por ${company} correspondiente a los periodos ${periods}, con el fin de identificar inconsistencias, omisiones, diferencias, prácticas de riesgo o situaciones que pudieran afectar la confiabilidad de la información y el cumplimiento de obligaciones ante terceros o autoridades.`,
+        "Estado de la información recibida": `Con base en la información suministrada por el cliente, Numbi identificó situaciones que requieren revisión, soporte, corrección, conciliación, reconstrucción o decisión expresa del cliente. Esta manifestación deja constancia de que dichas situaciones fueron informadas al cliente y de que la decisión sobre mantenerlas, corregirlas, manejarlas por fuera o continuar con ellas corresponde al cliente, salvo las actividades expresamente contratadas con Numbi.`,
+        "Hallazgos identificados": notifiedFindingsList(),
+        "Riesgos contables, financieros y tributarios": `Numbi informó al cliente que las situaciones identificadas pueden comprometer la razonabilidad de los estados financieros, la trazabilidad de los soportes, la determinación de impuestos, la realidad económica de las operaciones y la consistencia entre contabilidad, facturación, bancos, declaraciones, información exógena, nómina, terceros y documentos soporte. A la fecha, la revisión registra ${highRisks.length} hallazgos con nivel alto o crítico.`,
+        "Posibles impactos en PyG, impuestos, patrimonio y estados financieros": `El cliente entiende que mantener, no corregir o manejar por fuera las inconsistencias notificadas puede generar ajustes presentes o futuros sobre ingresos, costos, gastos, activos, pasivos, patrimonio, resultados del periodo, declaraciones tributarias, certificados, reportes a terceros, estados financieros e indicadores financieros. El cliente también entiende que la información puede no reflejar fielmente la realidad económica de la compañía mientras no se realicen las correcciones o validaciones correspondientes.`,
+        "Riesgos ante fiscalizaciones o requerimientos de autoridades": `Numbi informó que estas situaciones pueden dar lugar a requerimientos, fiscalizaciones, cruces de información, rechazo de costos o deducciones, liquidación de mayores impuestos, intereses, sanciones, cuestionamientos sobre facturación electrónica, investigaciones o solicitudes de explicación por parte de autoridades tributarias, laborales, societarias, financieras o de control.`,
+        "Responsabilidad sobre la información suministrada por el cliente": `El cliente reconoce que la información contable, tributaria, financiera y documental entregada a Numbi proviene de la sociedad, de sus administradores, de terceros, de periodos anteriores o de procesos no ejecutados por Numbi. En consecuencia, el cliente asume la responsabilidad por la veracidad, integridad, oportunidad, soporte y realidad económica de dicha información, así como por las decisiones que adopte frente a inconsistencias, omisiones, soportes faltantes o prácticas advertidas por Numbi.`,
+        "Limitación frente a periodos anteriores": `Numbi no asume responsabilidad por errores, omisiones, inconsistencias, registros incompletos, soportes inexistentes, decisiones, certificaciones, declaraciones, facturación, tratamientos contables o prácticas adoptadas antes del inicio del servicio, fuera del alcance contratado o por instrucción directa del cliente. Esta limitación no constituye una exoneración absoluta de responsabilidad de Numbi respecto de sus propias actividades, sino una delimitación frente a información y decisiones que no fueron preparadas, controladas o aprobadas por Numbi.`,
+        "Instrucción del cliente frente a los hallazgos": `${clientDecisionBlock()}<p>Numbi podrá proponer, documentar o explicar ajustes y recomendaciones dentro del alcance contratado. Sin embargo, si el cliente decide no aprobarlos, postergarlos, ejecutarlos por fuera o continuar con información inconsistente, dicha decisión quedará bajo responsabilidad del cliente y de la sociedad que representa.</p>`,
+        "Información pendiente por entregar": pending.length ? `<p>Para mitigar los riesgos informados, se identifican como pendientes o asuntos por definir los siguientes puntos:</p><ul>${pending.map((item) => `<li>${escapeHtml(item.text)} Responsable: ${escapeHtml(item.owner)}. Estado: ${escapeHtml(item.status)}.</li>`).join("")}</ul>` : "No se registran pendientes abiertos en la tabla al momento de generar esta versión. Si el cliente decide mantener la información sin ajustes adicionales, dicha decisión deberá quedar señalada en la sección de autorización e instrucciones del cliente.",
+        "Manifestación final del cliente": `El cliente manifiesta expresamente que Numbi le informó las inconsistencias, omisiones, riesgos o malas prácticas identificadas en la información del periodo ${periods}; que entiende los posibles efectos contables, tributarios, financieros, administrativos, legales y reputacionales; y que asume la responsabilidad por la decisión de mantener, no corregir, manejar por fuera, postergar o continuar utilizando dicha información. El cliente reconoce que esta manifestación busca dejar evidencia de la notificación realizada por Numbi y de la decisión informada del cliente, sin eliminar la responsabilidad de Numbi por las actividades que ejecute directamente dentro del alcance contratado.`,
         "Espacio de firmas": ""
       };
     }
@@ -1098,8 +1165,8 @@
         <div class="doc-header">
           <div>
             <div class="doc-brand">numbi</div>
-            <div class="doc-kicker">Acta de diagnóstico · ${escapeHtml(formattedDate(data.fecha))}</div>
-            <div class="doc-title">Diagnóstico contable, limitaciones y aceptación de riesgos</div>
+            <div class="doc-kicker">Manifestación escrita · ${escapeHtml(formattedDate(data.fecha))}</div>
+            <div class="doc-title">Manifestación escrita de inconsistencias y asunción de responsabilidad</div>
           </div>
           <div class="doc-code">
             Documento ${state.final ? "final" : "preliminar"}<br>
@@ -1163,12 +1230,12 @@
         final: state.final,
         findingsText: $("findingsText").value
       };
-      localStorage.setItem("numbi-acta-diagnostico", JSON.stringify(data));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       $("docStatus").textContent = "Versión preliminar guardada en este navegador.";
     }
 
     function loadDraft() {
-      const raw = localStorage.getItem("numbi-acta-diagnostico");
+      const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       try {
         const data = JSON.parse(raw);
@@ -1182,7 +1249,7 @@
         $("findingsText").value = data.findingsText || "";
         renderFindings();
       } catch {
-        localStorage.removeItem("numbi-acta-diagnostico");
+        localStorage.removeItem(STORAGE_KEY);
       }
     }
 
